@@ -49,6 +49,21 @@ describe("parseSse", () => {
     ]);
   });
 
+  it("keeps the CRLF field lines of one event together", async () => {
+    const events = await collect(
+      streamFrom([
+        'event: response.output_text.delta\r\ndata: {"delta":"hi"}\r\n\r\n',
+        "event: ping\r\ndata: not json\r\n\r\n",
+        'data: {"type":"a",\r\ndata: "b":1}\r\n\r\n',
+      ]),
+    );
+    expect(events).toEqual([
+      { type: "response.output_text.delta", delta: "hi" },
+      { type: "ping" },
+      { type: "a", b: 1 },
+    ]);
+  });
+
   it("emits a final event without a trailing blank line", async () => {
     const events = await collect(
       streamFrom(['data: {"type":"response.completed","response":{"id":"eof"}}\n']),
