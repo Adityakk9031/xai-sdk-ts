@@ -99,6 +99,17 @@ describe("typed errors", () => {
     }
   });
 
+  it("keeps the API message for 400s that only mention reasoning", async () => {
+    const message = "reasoning_effort is not supported by this model";
+    try {
+      await client(400, { error: { message } }).responses.create(createBody);
+      throw new Error("expected failure");
+    } catch (err) {
+      expect(APIError.is(err)).toBe(true);
+      expect((err as APIError).message).toBe(message);
+    }
+  });
+
   it("times out idle JSON reads as TimeoutError", async () => {
     const { fetch } = mockFetch(
       () =>
